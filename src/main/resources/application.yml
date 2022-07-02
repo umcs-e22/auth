@@ -1,0 +1,36 @@
+  bezkoder:
+    app:
+      jwtSecret: bezKoderSecretKey
+      jwtExpirationMs: 86400000
+
+  spring:
+    application:
+      name: GATEWAY-SERVICE
+    data:
+      mongodb:
+        authentication-database: admin
+        username: rootuser
+        password: rootpass
+        database: appdatabase
+        port: 27017
+        host: localhost
+        auto-index-creation: true
+    mvc:
+      pathmatch:
+        matching-strategy: ant_path_matcher
+    cloud:
+      gateway:
+        routes:
+          - id: books-service
+            uri: lb://BOOKS-SERVICE
+            predicates:
+              - Path=/books/**
+
+  eureka:
+    client:
+      register-with-eureka: true
+      fetch-registry: true
+      service-url:
+        defaultZone: http://localhost:8761/eureka/
+    instance:
+      hostname: localhost
