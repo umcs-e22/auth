@@ -11,6 +11,8 @@ import com.assigment.auth.securityJwt.application.response.MessageResponse;
 import com.assigment.auth.securityJwt.application.request.LoginRequest;
 import com.assigment.auth.securityJwt.application.request.SignupRequest;
 import com.assigment.auth.securityJwt.application.response.JwtResponse;
+import com.assigment.auth.securityJwt.application.response.UserDto;
+import com.assigment.auth.securityJwt.domain.authenticationFacade.IAuthenticationFacade;
 import com.assigment.auth.securityJwt.domain.jwt.JwtUtils;
 import com.assigment.auth.securityJwt.domain.services.UserDetailsImpl;
 import org.slf4j.Logger;
@@ -41,6 +43,9 @@ import com.assigment.auth.securityJwt.domain.repository.UserRepository;
 public class AuthController {
 	@Autowired
 	AuthenticationManager authenticationManager;
+
+	@Autowired
+	private IAuthenticationFacade authenticationFacade;
 
 	@Autowired
 	UserRepository userRepository;
@@ -77,6 +82,16 @@ public class AuthController {
 												 roles));
 	}
 
+	@PostMapping("/check")
+	public ResponseEntity<?> checkUser() {
+		UserDetailsImpl userDetails = authenticationFacade.getUserDetailsImpl();
+		List<String> roles = userDetails.getAuthorities().stream()
+				.map(GrantedAuthority::getAuthority)
+				.collect(Collectors.toList());
+
+		return ResponseEntity.ok(new UserDto(userDetails.getUserUUID(), userDetails.getUsername(), userDetails.getEmail(), roles));
+	}
+
 	@PostMapping("/register")
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		if (userRepository.existsByUsername(signUpRequest.getUsername())) {
@@ -102,50 +117,9 @@ public class AuthController {
 				.orElseGet(()-> roleRepository.insert(new Role(ERole.ROLE_BASIC_USER)));
 		roles.add(role);
 
-//		if (strRoles == null) {
-//			Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-//					.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-//			roles.add(userRole);
-//		} else {
-//			strRoles.forEach(role -> {
-//				switch (role) {
-//				case "admin":
-//					Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-//							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-//					roles.add(adminRole);
-//
-//					break;
-//				case "mod":
-//					Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-//							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-//					roles.add(modRole);
-//
-//					break;
-//				default:
-//					Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-//							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-//					roles.add(userRole);
-//				}
-//			});
-//		}
-
 		user.setRoles(roles);
 		userRepository.save(user);
 
-//		Person person = new Person(user.getEmail());
-//		person.setUser(user);
-//		person.setUserUUID(user.getUserUUID());
-//		personRepository.findByEmail(user.getEmail())
-//				.ifPresentOrElse(p->{
-//					log.warn("Person: "+ p +" already exist but should not.");
-//					p.setUser(user);
-//					personRepository.save(person);
-//				}, ()->{
-//					log.info("Created Person " + person.getEmail());
-//					personRepository.save(person);
-//				});
-//
-//		log.info("Registered user:"+ person.getEmail());
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 	}
 }
