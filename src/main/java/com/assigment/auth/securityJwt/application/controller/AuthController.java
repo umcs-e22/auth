@@ -37,7 +37,7 @@ import com.assigment.auth.securityJwt.domain.models.User;
 import com.assigment.auth.securityJwt.domain.repository.RoleRepository;
 import com.assigment.auth.securityJwt.domain.repository.UserRepository;
 
-@CrossOrigin(origins = "http://localhost:8083", maxAge = 3600)
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -76,7 +76,7 @@ public class AuthController {
 				.collect(Collectors.toList());
 
 		return ResponseEntity.ok(new JwtResponse(jwt,
-												 userDetails.getId(), 
+												 userDetails.getUserUUID(),
 												 userDetails.getUsername(), 
 												 userDetails.getEmail(), 
 												 roles));
